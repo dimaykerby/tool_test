@@ -115,21 +115,31 @@ async function renderPage(pageNumber) {
     const canvas = document.getElementById("pdfCanvas");
     const ctx = canvas.getContext("2d");
 
-    // ✅ Increase scale factor for better quality
-    const scale = 1;  // Change to 2.0 or higher for HD quality
+    // ✅ Get container size to properly scale the PDF
+    const container = document.querySelector(".pdf-viewer");
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
 
-    const viewport = page.getViewport({ scale: scale });
+    // ✅ Maintain aspect ratio while scaling
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
 
-    // ✅ Use device pixel ratio for sharp rendering
+    const scaledViewport = page.getViewport({ scale: scale });
+
+    // ✅ Use device pixel ratio for high-resolution rendering (Retina screens)
     const outputScale = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(viewport.width * outputScale);
-    canvas.height = Math.floor(viewport.height * outputScale);
-    canvas.style.width = `${viewport.width}px`;
-    canvas.style.height = `${viewport.height}px`;
+    canvas.width = Math.floor(scaledViewport.width * outputScale);
+    canvas.height = Math.floor(scaledViewport.height * outputScale);
+    canvas.style.width = `${scaledViewport.width}px`;
+    canvas.style.height = `${scaledViewport.height}px`;
 
+    // ✅ Scale context for better quality
+    ctx.scale(outputScale, outputScale);
+
+    // ✅ Render the PDF with high resolution
     const renderContext = {
         canvasContext: ctx,
-        viewport: viewport
+        viewport: scaledViewport
     };
 
     await page.render(renderContext);
@@ -142,10 +152,9 @@ function loadQuestionsForPage(page) {
     }
 
     currentPage = page;
-
     document.getElementById("pageNumberInput").value = page;
 
-    // ✅ Render the correct page from the PDF
+    // ✅ Always render the PDF when changing pages
     renderPage(page);
 
     // ✅ Get questions for this page
@@ -169,14 +178,20 @@ function loadQuestionsForPage(page) {
             input.oninput = () => studentAnswers[q.id] = input.value;
             questionDiv.appendChild(input);
         } else {
+            // ✅ Sort choices alphabetically
             let choices = (q.wrong_answers || []).concat(q.correct_answer);
-            choices.sort(() => Math.random() - 0.5).forEach(choice => {
+            choices.sort((a, b) => a.localeCompare(b)); // Sort A-Z
+
+            choices.forEach(choice => {
                 let btn = document.createElement("button");
                 btn.textContent = choice;
                 btn.onclick = () => selectAnswer(q.id, choice, btn);
+                
+                // ✅ Keep previously selected answer highlighted
                 if (studentAnswers[q.id] === choice) {
                     btn.style.background = "green";
                 }
+                
                 questionDiv.appendChild(btn);
             });
         }
@@ -187,5 +202,16 @@ function loadQuestionsForPage(page) {
 
 function selectAnswer(questionId, answer, btn) {
     studentAnswers[questionId] = answer;
-    loadQuestionsForPage(currentPage);
+
+    // ✅ Only update buttons within the selected question
+    const questionDiv = btn.closest("div"); // Find the parent div for this question
+    const buttons = questionDiv.querySelectorAll("button");
+
+    buttons.forEach(b => {
+        if (b.textContent === answer) {
+            b.style.background = "green";
+        } else {
+            b.style.background = "";
+        }
+    });
 }
