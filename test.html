@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body>
+    <div class="test-container">
+        <!-- PDF Canvas Viewer (Replaces iframe) -->
+        <div class="pdf-viewer">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+
+        <!-- Question & Answer Section -->
+        <div class="question-section">
+            <h2 id="question-text"></h2>
+            <div id="question-container"></div>
+            <input type="text" id="open-ended-answer" placeholder="Type your answer" style="display: none;">
+            
+            <!-- Navigation Buttons & Jump to Page -->
+            <div class="navigation">
+                <button id="prevPage">Previous Page</button>
+                <input type="number" id="pageNumberInput" min="1" value="1">
+                <button id="jumpToPage">Go</button>
+                <button id="nextPage">Next Page</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co";  // Replace with actual Supabase URL
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  // Replace with actual API key
+
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
+
+    <script type="module" src="test.js"></script>
+</body>
+</html>

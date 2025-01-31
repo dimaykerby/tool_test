@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Mock Test</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Enter Your Test Code</h2>
+        <form id="loginForm">
+            <input type="text" id="studentCode" placeholder="Enter Code" required>
+            <button type="submit" id="loginBtn">Login</button>
+            <p id="errorMessage" style="color: red;"></p>
+        </form>
+    </div>
+
+    <!-- ✅ Load Supabase via CDN -->
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
+
+    <!-- ✅ Load JavaScript after Supabase -->
+    <script type="module" src="index.js"></script>
+    <script type="module" src="test.js"></script>
+</body>
+</html>
