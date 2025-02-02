@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginBtn = document.getElementById("loginBtn");
 
     if (!loginBtn) {
-        console.error("❌ ERROR: 'loginBtn' not found in HTML.");
+        console.error("ERROR: 'loginBtn' not found in HTML.");
         return;
     }
 
@@ -16,11 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!studentCode) {
             errorMessage.textContent = "Please enter your code!";
-            console.log("⚠️ No code entered.");
+            console.log("No code entered.");
             return;
         }
 
-        console.log(`🔍 Fetching student with login code: ${studentCode}...`);
+        console.log(`Fetching student with login code: ${studentCode}...`);
 
         let { data: student, error } = await supabase
             .from("students")
@@ -28,15 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .eq("login_code", studentCode)
             .single();
 
-        console.log("📄 Supabase Response:", student, error);
+        console.log("Supabase Response:", student, error);
 
         if (error || !student) {
             errorMessage.textContent = "Invalid code. Try again!";
-            console.error("❌ ERROR: Login failed", error);
+            console.error("ERROR: Login failed", error);
             return;
         }
 
-        console.log("✅ Login successful!", student);
+        console.log("Login successful!", student);
 
         // ✅ Store assigned test PDF in sessionStorage
         sessionStorage.setItem("studentId", student.id);

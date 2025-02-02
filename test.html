@@ -24,10 +24,21 @@
             <div class="navigation">
                 <button id="prevPage">Previous Page</button>
                 <input type="number" id="pageNumberInput" min="1" value="1">
-                <button id="jumpToPage">Go</button>
-                <button id="nextPage">Next Page</button>
+                <!--<button id="jumpToPage">Go</button>-->
+                <button id="nextPage">Next Page</button>             
             </div>
+            <div class="pdf-controls">
+                <button id="zoomIn">➕ Zoom In</button>
+                <button id="zoomOut">➖ Zoom Out</button>
+            </div>
+            <!-- Submit Answers Button -->
+            <div class="submit-section">
+                <button id="submitAnswers">Submit Answers</button>
+                <p id="submissionMessage" style="color: green; display: none;"></p>
+            </div>               
+
         </div>
+
     </div>
 
     <script type="module">

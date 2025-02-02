@@ -16,7 +16,7 @@
         </form>
     </div>
 
-    <!-- ✅ Load Supabase via CDN -->
+    <!-- Load Supabase via CDN -->
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -26,7 +26,7 @@
         window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
-    <!-- ✅ Load JavaScript after Supabase -->
+    <!-- Load JavaScript after Supabase -->
     <script type="module" src="index.js"></script>
     <script type="module" src="test.js"></script>
 </body>
