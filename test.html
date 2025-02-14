@@ -14,28 +14,31 @@
             <canvas id="pdfCanvas"></canvas>
         </div>
 
+
         <!-- Question & Answer Section -->
         <div class="question-section">
+            <div id="timer" style="visibility: visible;">⏳ Tempo: <span id="time-left"></span></div>
+                        
+            <!-- Navigation Buttons & Jump to Page -->
+            <div class="navigation">
+                <button id="prevPage">Indietro</button>
+                <button id="nextPage">Avanti</button>
+            </div>
             <h2 id="question-text"></h2>
             <div id="question-container"></div>
             <input type="text" id="open-ended-answer" placeholder="Type your answer" style="display: none;">
-            
-            <!-- Navigation Buttons & Jump to Page -->
-            <div class="navigation">
-                <button id="prevPage">Previous Page</button>
-                <input type="number" id="pageNumberInput" min="1" value="1">
-                <!--<button id="jumpToPage">Go</button>-->
-                <button id="nextPage">Next Page</button>             
-            </div>
+
+            <!-- Submit Answers Button -->
+            <div class="submit-section">
+                <button id="submitAnswers" style="display: none;">Manda Risposte</button>
+                <p id="submissionMessage" style="color: green; display: none;"></p>
+            </div> 
+
             <div class="pdf-controls">
                 <button id="zoomIn">➕ Zoom In</button>
                 <button id="zoomOut">➖ Zoom Out</button>
             </div>
-            <!-- Submit Answers Button -->
-            <div class="submit-section">
-                <button id="submitAnswers">Submit Answers</button>
-                <p id="submissionMessage" style="color: green; display: none;"></p>
-            </div>               
+            
 
         </div>
 

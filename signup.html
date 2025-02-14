@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Mock Test</title>
+    <title>Sign Up | Mock Test</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h2>Login</h2>
+        <h2>Sign Up</h2>
+        <input type="text" id="fullName" placeholder="Enter Full Name">
         <input type="email" id="email" placeholder="Enter Email">
         <input type="password" id="password" placeholder="Enter Password">
-        <button id="loginBtn">Login</button>
-        <p id="errorMessage" style="color: red;"></p>
-
-        <p>Forgot password? <a href="#" id="resetPassword">Reset it</a></p>
+        <button id="signupBtn">Sign Up</button>
+        <p>Already have an account? <a href="index.html">Login</a></p>
     </div>
 
-    <!-- Load Supabase via CDN -->
+    <!-- Include Supabase -->
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -27,7 +26,6 @@
         window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
-    <!-- Load JavaScript after Supabase -->
-    <script type="module" src="index.js"></script>
+    <script type="module" src="signup.js"></script>
 </body>
 </html>
