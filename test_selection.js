@@ -33,6 +33,7 @@ async function loadTestTree() {
         .eq("auth_uid", user.id)
         .single();
 
+    console.log("👤 Student Data:", student);
     if (studentError || !student) {
         console.error("❌ Error fetching student record:", studentError?.message);
         alert("Student data not found. Please contact support.");
@@ -59,7 +60,7 @@ async function loadTestTree() {
     // ✅ Fetch unique sections & tests from `questions` table
     const { data: tests, error } = await supabase
         .from("questions")
-        .select("section, test_number")  // ✅ Remove `DISTINCT`, Supabase doesn’t support it in `select()`
+        .select("section, test_number")
         .order("section, test_number");
 
     if (error) {

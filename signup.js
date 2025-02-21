@@ -10,18 +10,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
         const fullName = document.getElementById("fullName").value.trim();
+        const tutorId = document.getElementById("tutorDropdown").value;
 
         if (!email || !password || !fullName) {
             alert("Please fill in all fields.");
             return;
         }
 
-        await signUpStudent(email, password, fullName);
+        await signUpStudent(email, password, fullName, tutorId);
     });
 });
 
 // ✅ Function to Sign Up a Student and Store in Database
-async function signUpStudent(email, password, fullName) {
+async function signUpStudent(email, password, fullName, tutorId) {
     const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
@@ -34,12 +35,17 @@ async function signUpStudent(email, password, fullName) {
     console.log("✅ Signup successful! Auth UID:", user.id);
 
     // ✅ Wait until the user exists in `auth.users`
-    await new Promise(resolve => setTimeout(resolve, 3000));  // Wait 3 seconds    
+    await new Promise(resolve => setTimeout(resolve, 3000));  // Wait 3 seconds   
 
-    // ✅ Insert student details into `students` table
-    const { error: insertError } = await supabase.from("students").insert([
-        { auth_uid: user.id, email: email, name: fullName }
-    ]);
+    if (!tutorId) {
+        alert("Please select a tutor.");
+        return;
+    }
+
+    // ✅ Insert student with selected tutor
+    const { error: insertError } = await supabase
+        .from("students")
+        .insert([{ auth_uid: user.id, email, name: fullName, tutor_id: tutorId }]);
 
     if (insertError) {
         console.error("❌ Error saving student info:", insertError.message);
@@ -94,3 +100,34 @@ async function initializeStudentTests(authUid) {
         console.log("✅ Student test entries created!");
     }
 }
+
+async function loadTutors() {
+    const tutorDropdown = document.getElementById("tutorDropdown");
+
+    const { data, error } = await supabase
+        .from("tutors")
+        .select("id, name");
+
+    if (error) {
+        console.error("❌ Error fetching tutors:", error.message);
+        alert("Failed to load tutors.");
+        return;
+    }
+
+    // ✅ Clear previous options
+    tutorDropdown.innerHTML = '<option value="">Select Your Tutor</option>';
+
+    // ✅ Populate dropdown with tutor names
+    data.forEach(tutor => {
+        let option = document.createElement("option");
+        option.value = tutor.id;
+        option.textContent = tutor.name;
+        tutorDropdown.appendChild(option);
+    });
+}
+
+// ✅ Refresh button to reload tutor list
+document.getElementById("refreshTutors").addEventListener("click", loadTutors);
+
+// ✅ Call this when the page loads
+document.addEventListener("DOMContentLoaded", loadTutors);

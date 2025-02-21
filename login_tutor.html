@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Tutor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Tutor Login</h2>
+        <input type="email" id="tutorEmail" placeholder="Email">
+        <input type="password" id="tutorPassword" placeholder="Password">
+        <button id="tutorLoginBtn">Login</button>
+        <p id="errorMessage" style="color: red;"></p>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById("tutorLoginBtn").addEventListener("click", async () => {
+            const email = document.getElementById("tutorEmail").value.trim();
+            const password = document.getElementById("tutorPassword").value.trim();
+
+            if (!email || !password) {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                console.error("❌ Login Failed:", error.message);
+                alert("Login failed: " + error.message);
+                return;
+            }
+
+            console.log("✅ Tutor Logged In!", data);
+            sessionStorage.setItem("tutorId", data.user.id);
+
+            // ✅ Redirect to tutor dashboard
+            window.location.href = "tutor_dashboard.html";
+        });
+    </script>
+</body>
+</html>

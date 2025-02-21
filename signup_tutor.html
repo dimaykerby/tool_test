@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Tutor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Sign Up as a Tutor</h2>
+        <input type="text" id="tutorName" placeholder="Full Name">
+        <input type="email" id="tutorEmail" placeholder="Email">
+        <input type="password" id="tutorPassword" placeholder="Password">
+        <button id="tutorSignupBtn">Sign Up</button>
+        <p id="errorMessage" style="color: red;"></p>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById("tutorSignupBtn").addEventListener("click", async () => {
+            const name = document.getElementById("tutorName").value.trim();
+            const email = document.getElementById("tutorEmail").value.trim();
+            const password = document.getElementById("tutorPassword").value.trim();
+
+            if (!name || !email || !password) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            // ✅ Sign up tutor using Supabase Auth
+            const { data, error } = await supabase.auth.signUp({ email, password });
+
+            if (error) {
+                console.error("❌ Tutor Signup Failed:", error.message);
+                alert("Signup failed: " + error.message);
+                return;
+            }
+
+            const user = data.user;
+            console.log("✅ Tutor Signed Up!", user);
+
+            // ✅ Save tutor details in the database
+            const { error: insertError } = await supabase
+                .from("tutors")
+                .insert([{ auth_uid: user.id, email, name }]);
+
+            if (insertError) {
+                console.error("❌ Error saving tutor info:", insertError.message);
+                alert("Error saving tutor info.");
+                return;
+            }
+
+            alert("✅ Tutor Sign-Up Successful! You can now log in.");
+            window.location.href = "login_tutor.html";
+        });
+    </script>
+</body>
+</html>

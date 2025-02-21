@@ -62,3 +62,20 @@ canvas {
 .pdf-viewer:active {
     cursor: grabbing;
 }
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    height: 80vh; /* ✅ Keeps the form within the viewport */
+    overflow-y: auto; /* ✅ Enables scrolling */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✅ Fix issue where dropdowns overflow */
+select {
+    height: 35px;
+}

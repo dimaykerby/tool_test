@@ -516,17 +516,17 @@ function updateNavigationButtons() {
 
     console.log(`🔄 Updating buttons for Page ${currentPage}`);
 
-    // ✅ Check if the current page is a section boundary
-    if (Object.values(sectionPageBoundaries).includes(currentPage)) {
+    const currentSection = parseInt(sessionStorage.getItem("currentSection"));
+
+    // ✅ Show "Prossima Sezione" ONLY IF in Section 7 AND at a section boundary
+    if (currentSection === 7 && Object.values(sectionPageBoundaries).includes(currentPage)) {
         nextPageBtn.textContent = "Prossima Sezione";
     } else {
         nextPageBtn.textContent = "Avanti";
     }
 
     // ✅ If we are on the first page of a new section, disable "Previous Page"
-    if (currentPage === sectionPageBoundaries[1] + 1 || 
-        currentPage === sectionPageBoundaries[2] + 1 || 
-        currentPage === sectionPageBoundaries[3] + 1) {
+    if (Object.values(sectionPageBoundaries).includes(currentPage + 1)) {
         prevPageBtn.disabled = true;
     } else {
         prevPageBtn.disabled = false;

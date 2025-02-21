@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Student Tests</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2 id="studentTestProgressTitle"></h2>
+        <div id="testTree">
+            <!-- ✅ Test progress tree will be loaded dynamically -->
+        </div>
+        <button id="backButton">⬅ Back to Tutor Dashboard</button>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const studentId = sessionStorage.getItem("selectedStudentId"); // ✅ Already `auth_uid`
+        const studentName = sessionStorage.getItem("selectedStudentName") || "Student";
+        document.getElementById("studentTestProgressTitle").textContent = `${studentName}'s Test Progress`;
+
+        if (!studentId) {
+            alert("Error: No student selected.");
+            window.location.href = "tutor_dashboard.html";
+        }
+
+        async function loadTestTree() {
+            console.log("👤 Viewing tests for Student UID:", studentId);
+
+            // ✅ Fetch student's test progress using `auth_uid`
+            const { data: studentTests, error: progressError } = await supabase
+                .from("student_tests")
+                .select("*")
+                .eq("auth_uid", studentId)
+                .order("section, test_number");
+
+            if (progressError) {
+                console.error("❌ Error fetching student progress:", progressError.message);
+                return;
+            }
+
+            console.log("📊 Student Progress Data:", studentTests);
+
+            // ✅ Fetch unique sections & tests from `questions` table
+            const { data: tests, error } = await supabase
+                .from("questions")
+                .select("section, test_number")
+                .order("section, test_number");
+
+            if (error) {
+                console.error("❌ Error fetching test structure:", error.message);
+                return;
+            }
+
+            // ✅ Remove duplicates manually
+            const uniqueTests = Array.from(
+                new Set(tests.map(test => `${test.section}-${test.test_number}`))
+            ).map(key => {
+                const [section, test_number] = key.split("-").map(Number);
+                return { section, test_number };
+            });
+
+            displayTestTree(uniqueTests, studentTests);
+        }
+
+        function displayTestTree(tests, studentTests) {
+            const testTree = document.getElementById("testTree");
+            testTree.innerHTML = "";
+
+            let currentSection = null;
+            let sectionDiv = null;
+
+            let sections = ["Logica e Insiemi", "Algebra", "Goniometria e Trigonometria", "Logaritmi e Esponenziali", "Geometria", "Probabilità, Combinatoria e Statistica", "Simulazioni"];
+
+            tests.forEach(test => {
+                if (test.section !== currentSection) {
+                    // ✅ Create a new section
+                    currentSection = test.section;
+                    sectionDiv = document.createElement("div");
+                    sectionDiv.classList.add("section");
+                    sectionDiv.innerHTML = `<h3>${sections[currentSection - 1]}</h3>`;
+                    testTree.appendChild(sectionDiv);
+                }
+
+                // ✅ Find student progress for this test
+                const studentTest = studentTests.find(t => t.section === test.section && t.test_number === test.test_number);
+                const status = studentTest ? studentTest.status : "locked";
+
+                // ✅ Create test button
+                const testBtn = document.createElement("button");
+                if (test.section < 7) {
+                    let exercises = ["Esercizi per casa", "Assessment", "Post Assessment"];
+                    testBtn.textContent = `${exercises[test.test_number - 1]}`;
+                } else {
+                    testBtn.textContent = `Simulazione ${test.test_number}`;
+                }
+
+                // ✅ Apply styles and behavior based on status
+                if (status === "completed") {
+                    testBtn.textContent += " ✔ Done";
+                    testBtn.classList.add("completed");
+                } else if (status === "locked") {
+                    testBtn.classList.add("locked");
+                    testBtn.onclick = () => unlockTest(test.section, test.test_number);
+                } else {
+                    testBtn.classList.add("unlocked");
+                }
+
+                // ✅ Append the button to the section
+                sectionDiv.appendChild(testBtn);
+            });
+        }
+
+        async function unlockTest(section, testNumber) {
+            console.log(`🔓 Unlocking Test: Section ${section}, Test ${testNumber}`);
+
+            const { error } = await supabase
+                .from("student_tests")
+                .update({ status: "unlocked", tutor_unlocked: true })
+                .eq("auth_uid", studentId)
+                .eq("section", section)
+                .eq("test_number", testNumber);
+
+            if (error) {
+                console.error("❌ Error unlocking test:", error);
+                alert("Failed to unlock test.");
+                return;
+            }
+
+            alert(`✅ Test ${testNumber} in Section ${section} unlocked!`);
+            loadTestTree(); // ✅ Reload progress tree
+        }
+
+        loadTestTree();
+    </script>
+
+    <!-- ✅ Fix: Add `goBack` function outside the module -->
+    <script>
+        function goBack() {
+            window.location.href = "tutor_dashboard.html";
+        }
+
+        document.getElementById("backButton").addEventListener("click", goBack);
+    </script>
+
+    <style>
+        .section {
+            margin-bottom: 20px;
+        }
+        .completed {
+            background-color: green;
+            color: white;
+        }
+        .locked {
+            background-color: gray;
+            color: white;
+        }
+        .unlocked {
+            background-color: blue;
+            color: white;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>

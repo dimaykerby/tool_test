@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modify Tests</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>📝 Add a New Question</h2>
+
+        <label for="pdfUpload">Upload PDF:</label>
+        <input type="file" id="pdfUpload" accept="application/pdf"><br>
+        <p id="uploadStatus"></p>
+
+        <label for="numQuestions">Number of Questions:</label>
+        <input type="number" id="numQuestions" min="1" placeholder="Enter number of questions"><br>
+        <button id="generateQuestions">Generate Question Fields</button>
+        
+        <div id="questionsContainer"></div>
+
+        <button id="submitQuestion">Add Questions</button><br>
+        <button onclick="goBack()">⬅ Back to Tutor Dashboard</button>
+    </div>
+
+    <script type="module" src="modify_tests.js" defer></script>
+
+    <style>
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            height: 80vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .question-block {
+            background: #f4f4f4;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        label, input, select, button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        select {
+            height: 35px;
+        }
+    </style>
+</body>
+</html>

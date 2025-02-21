@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>📚 Tutor Dashboard</h2>
+        <button id="logoutBtn">Logout</button>
+        <button id="modifyTestsBtn">Modify Tests</button>
+
+        <!-- ✅ Student List -->
+        <h3>Your Students</h3>
+        <div id="studentsContainer">
+            <!-- ✅ Student progress trees & View Tests buttons will be added dynamically -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function getTutorId() {
+            const { data: userData, error: authError } = await supabase.auth.getUser();
+
+            if (authError || !userData || !userData.user) {
+                console.error("❌ Error getting authenticated tutor:", authError);
+                alert("Session expired. Please log in again.");
+                window.location.href = "login_tutor.html";
+                return null;
+            }
+
+            const authUid = userData.user.id;
+            console.log("✅ Authenticated Tutor ID:", authUid);
+
+            const { data: tutorData, error: tutorError } = await supabase
+                .from("tutors")
+                .select("id")
+                .eq("auth_uid", authUid)
+                .single();
+
+            if (tutorError || !tutorData) {
+                console.error("❌ Error fetching tutor ID:", tutorError);
+                alert("Tutor account not found.");
+                return null;
+            }
+
+            console.log("✅ Tutor ID:", tutorData.id);
+
+            return tutorData.id;
+        }
+
+        async function fetchStudents() {
+            const tutorId = await getTutorId();
+            if (!tutorId) return;
+
+            const { data: students, error: studentError } = await supabase
+                .from("students")
+                .select("id, auth_uid, name")
+                .eq("tutor_id", tutorId);
+            
+            console.log("✅ Fetched students:", students);    
+
+            if (studentError) {
+                console.error("❌ Error fetching students:", studentError);
+                return;
+            }
+
+            displayStudentProgress(students);
+        }
+
+        async function fetchStudentTests(studentId) {
+            const { data: tests, error } = await supabase
+                .from("student_tests")
+                .select("section, test_number, status")
+                .eq("auth_uid", studentId)
+                .order("section, test_number");
+
+        
+            if (error) {
+                console.error(`❌ Error fetching tests for student ${studentId}:`, error);
+                return [];
+            }
+
+            return tests;
+        }
+
+        async function displayStudentProgress(students) {
+            const studentsContainer = document.getElementById("studentsContainer");
+            studentsContainer.innerHTML = "";
+
+            for (const student of students) {
+                const studentDiv = document.createElement("div");
+                studentDiv.classList.add("student-progress");
+                studentDiv.innerHTML = `
+                    <h3>${student.name}</h3>
+                    <div id="tree-${student.auth_uid}" class="testTree"></div>
+                    <button class="viewTestsBtn" onclick="viewStudentTests('${student.auth_uid}', '${student.name}')">View Tests</button>
+                `;
+
+                studentsContainer.appendChild(studentDiv);
+            }
+        }
+
+        // ✅ Redirects to `view_tests.html` with student ID
+        window.viewStudentTests = function (studentId, studentName) {
+            sessionStorage.setItem("selectedStudentId", studentId);
+            sessionStorage.setItem("selectedStudentName", studentName);
+            window.location.href = "view_tests.html";
+        };
+
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            window.location.href = "login_tutor.html";
+        });
+        document.getElementById("modifyTestsBtn").addEventListener("click", () => {
+            window.location.href = "modify_tests.html";
+        });        
+
+        fetchStudents();
+    </script>
+
+    <style>
+        .student-progress {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        .testTree {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .test-node {
+            padding: 8px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+        .viewTestsBtn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .viewTestsBtn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</body>
+</html>

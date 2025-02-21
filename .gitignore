@@ -30,3 +30,7 @@ database_questions.csv
 
 # Optional: Ignore package-lock.json (if you don't want to track it)
 package-lock.json
+
+# ignore excel
+*.xlsx
+*.csv
