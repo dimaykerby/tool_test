@@ -25,6 +25,8 @@
         const studentId = sessionStorage.getItem("selectedStudentId"); // ✅ Already `auth_uid`
         const studentName = sessionStorage.getItem("selectedStudentName") || "Student";
         document.getElementById("studentTestProgressTitle").textContent = `${studentName}'s Test Progress`;
+        const exercises = ["Esercizi per casa", "Assessment", "Post Assessment"];
+        const sections = ["Logica e Insiemi", "Algebra", "Goniometria e Trigonometria", "Logaritmi e Esponenziali", "Geometria", "Probabilità, Combinatoria e Statistica", "Simulazioni"];
 
         if (!studentId) {
             alert("Error: No student selected.");
@@ -77,8 +79,6 @@
             let currentSection = null;
             let sectionDiv = null;
 
-            let sections = ["Logica e Insiemi", "Algebra", "Goniometria e Trigonometria", "Logaritmi e Esponenziali", "Geometria", "Probabilità, Combinatoria e Statistica", "Simulazioni"];
-
             tests.forEach(test => {
                 if (test.section !== currentSection) {
                     // ✅ Create a new section
@@ -96,21 +96,19 @@
                 // ✅ Create test button
                 const testBtn = document.createElement("button");
                 if (test.section < 7) {
-                    let exercises = ["Esercizi per casa", "Assessment", "Post Assessment"];
                     testBtn.textContent = `${exercises[test.test_number - 1]}`;
                 } else {
                     testBtn.textContent = `Simulazione ${test.test_number}`;
                 }
 
-                // ✅ Apply styles and behavior based on status
+                // ✅ Apply styles based on status
                 if (status === "completed") {
                     testBtn.textContent += " ✔ Done";
                     testBtn.classList.add("completed");
-                } else if (status === "locked") {
-                    testBtn.classList.add("locked");
-                    testBtn.onclick = () => unlockTest(test.section, test.test_number);
+                    testBtn.onclick = () => confirmResetTest(test.section, test.test_number); // ✅ Prevent toggle, ask to reset
                 } else {
-                    testBtn.classList.add("unlocked");
+                    testBtn.classList.add(status); // `locked` or `unlocked`
+                    testBtn.onclick = () => toggleTestLock(test.section, test.test_number, status);
                 }
 
                 // ✅ Append the button to the section
@@ -118,23 +116,80 @@
             });
         }
 
-        async function unlockTest(section, testNumber) {
-            console.log(`🔓 Unlocking Test: Section ${section}, Test ${testNumber}`);
+        async function confirmResetTest(section, testNumber) {
+            const confirmReset = confirm("⚠ This test is marked as completed. Do you want to reset it and remove all student answers?");
+            if (!confirmReset) return;
+
+            console.log(`🔄 Resetting Test: Section ${section}, Test ${testNumber}`);
+
+            // ✅ Step 1: Find all question IDs linked to this test
+            const { data: questions, error: questionError } = await supabase
+                .from("questions")
+                .select("id")
+                .eq("section", section)
+                .eq("test_number", testNumber);
+
+            if (questionError) {
+                console.error("❌ Error fetching questions for reset:", questionError);
+                alert("Failed to reset test.");
+                return;
+            }
+
+            const questionIds = questions.map(q => q.id);
+            if (questionIds.length === 0) {
+                alert("No questions found for this test.");
+                return;
+            }
+
+            // ✅ Step 2: Delete student answers linked to these questions
+            const { error: deleteError } = await supabase
+                .from("student_answers")
+                .delete()
+                .in("question_id", questionIds)
+                .eq("auth_uid", studentId); // ✅ Delete only this student's answers
+
+            if (deleteError) {
+                console.error("❌ Error deleting student answers:", deleteError);
+                alert("Failed to reset test.");
+                return;
+            }
+
+            // ✅ Step 3: Set test status back to "locked"
+            const { error: updateError } = await supabase
+                .from("student_tests")
+                .update({ status: "locked", tutor_unlocked: false })
+                .eq("auth_uid", studentId)
+                .eq("section", section)
+                .eq("test_number", testNumber);
+
+            if (updateError) {
+                console.error("❌ Error resetting test status:", updateError);
+                alert("Failed to reset test.");
+                return;
+            }
+
+            alert("✅ Test reset successfully. The student will have to retake it.");
+            loadTestTree(); // ✅ Reload progress tree
+        }        
+
+        async function toggleTestLock(section, testNumber, currentStatus) {
+            const newStatus = currentStatus === "locked" ? "unlocked" : "locked"; // ✅ Toggle status
+            console.log(`🔄 Toggling Test: Section ${section}, Test ${testNumber} → ${newStatus}`);
 
             const { error } = await supabase
                 .from("student_tests")
-                .update({ status: "unlocked", tutor_unlocked: true })
+                .update({ status: newStatus, tutor_unlocked: newStatus === "unlocked" })
                 .eq("auth_uid", studentId)
                 .eq("section", section)
                 .eq("test_number", testNumber);
 
             if (error) {
-                console.error("❌ Error unlocking test:", error);
-                alert("Failed to unlock test.");
+                console.error("❌ Error toggling test:", error);
+                alert("Failed to update test status.");
                 return;
             }
 
-            alert(`✅ Test ${testNumber} in Section ${section} unlocked!`);
+            alert(`✅${exercises[testNumber-1]} in ${sections[section-1]} is now ${newStatus}!`);
             loadTestTree(); // ✅ Reload progress tree
         }
 

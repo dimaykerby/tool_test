@@ -3,8 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+        persistSession: true
+    }
+});
 // ✅ Predefined Sections, Test Numbers, and Argomenti
 const sections = [
     "Logica e Insiemi", "Algebra", "Goniometria e Trigonometria",
@@ -14,9 +17,19 @@ const sections = [
 const testNumbers = ["Esercizi per casa", "Assessment", "Post Assessment"];
 
 const argomenti = [
-    "logica e insiemi", "geometria", "scienze", "algebra", "probabilità",
+    "logica e insiemi", "geometria", "scienze", "algebra", "goniometria", "probabilità",
     "combinatoria", "comprensione verbale", "geometria analitica", "funzioni"
 ];
+
+async function checkAuth() {
+    const { data: user, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+        alert("❌ You must be logged in to upload files.");
+        return false;
+    }
+    return true;
+}
 
 // ✅ Function to Generate Dropdowns
 function createDropdown(options, className) {
@@ -125,3 +138,27 @@ document.getElementById("submitQuestion").addEventListener("click", async () => 
 window.goBack = function () {
     window.location.href = "tutor_dashboard.html";
 };
+
+// ✅ Upload PDF & Store URL in "tolc_i" bucket
+document.getElementById("pdfUpload").addEventListener("change", async function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const filePath = `${file.name}`;  // ✅ Store inside "tolc_i" bucket
+
+    let { data, error } = await supabase.storage
+        .from("tolc_i")  // ✅ Use "tolc_i" bucket
+        .upload(filePath, file);
+
+    if (error) {
+        console.error("❌ Error uploading PDF:", error);
+        document.getElementById("uploadStatus").textContent = "Upload Failed.";
+        return;
+    }
+
+    // ✅ Generate the public URL for the uploaded PDF
+    const pdfUrl = `${SUPABASE_URL}/storage/v1/object/public/${filePath}`;
+    console.log("✅ PDF URL:", pdfUrl);
+    document.getElementById("uploadStatus").textContent = "✅ Upload Successful!";
+    sessionStorage.setItem("pdfUrl", pdfUrl);
+});

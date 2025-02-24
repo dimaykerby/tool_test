@@ -110,12 +110,12 @@ async function loadTest() {
 
     // ✅ Store dynamically fetched page numbers
     sectionPageBoundaries = {};
-    
-    sectionPageBoundaries = {
-        1: boundaries.find(q => q.question_number === 20)?.page_number || null,
-        2: boundaries.find(q => q.question_number === 30)?.page_number || null,
-        3: boundaries.find(q => q.question_number === 40)?.page_number || null
-    };
+
+    boundaries.forEach(q => {
+        if (q.question_number === 20) sectionPageBoundaries[1] = q.page_number;
+        if (q.question_number === 30) sectionPageBoundaries[2] = q.page_number;
+        if (q.question_number === 40) sectionPageBoundaries[3] = q.page_number;
+    });
 
     console.log("✅ Section Boundaries Loaded:", sectionPageBoundaries);
 
@@ -509,7 +509,6 @@ function updateTimer() {
 }
 
 let currentSubsection = 1; // Track which subsection the student is on
-
 function updateNavigationButtons() {
     const prevPageBtn = document.getElementById("prevPage");
     const nextPageBtn = document.getElementById("nextPage");
@@ -518,15 +517,18 @@ function updateNavigationButtons() {
 
     const currentSection = parseInt(sessionStorage.getItem("currentSection"));
 
-    // ✅ Show "Prossima Sezione" ONLY IF in Section 7 AND at a section boundary
-    if (currentSection === 7 && Object.values(sectionPageBoundaries).includes(currentPage)) {
+    // ✅ Prevent navigating back after section transition
+    const isSectionBoundary = Object.values(sectionPageBoundaries).includes(currentPage);
+    const isPastBoundary = Object.values(sectionPageBoundaries).some(boundary => boundary && currentPage === boundary+1);
+
+    if (currentSection === 7 && isSectionBoundary) {
         nextPageBtn.textContent = "Prossima Sezione";
     } else {
         nextPageBtn.textContent = "Avanti";
     }
 
-    // ✅ If we are on the first page of a new section, disable "Previous Page"
-    if (Object.values(sectionPageBoundaries).includes(currentPage + 1)) {
+    // ✅ Disable "Previous Page" if past a section boundary (Page 21, 31, 41)
+    if (currentSection === 7 && isPastBoundary) {
         prevPageBtn.disabled = true;
     } else {
         prevPageBtn.disabled = false;
