@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
-    <div class="test-container">
+    <div class="test-container" tabindex="0">
         <!-- PDF Canvas Viewer (Replaces iframe) -->
         <div class="pdf-viewer">
             <canvas id="pdfCanvas"></canvas>
@@ -19,11 +19,11 @@
         <div class="question-section">
             <div id="timer" style="visibility: visible;">⏳ Tempo: <span id="time-left"></span></div>
                         
-            <!-- Navigation Buttons & Jump to Page -->
-            <div class="navigation">
-                <button id="prevPage">Indietro</button>
-                <button id="nextPage">Avanti</button>
-            </div>
+        <!-- Navigation Buttons (Hidden on First Page) -->
+        <div class="navigation">
+            <button id="prevPage" style="display: none;">Indietro</button>
+            <button id="nextPage" style="display: none;">Avanti</button>
+        </div>
             <h2 id="question-text"></h2>
             <div id="question-container"></div>
             <input type="text" id="open-ended-answer" placeholder="Type your answer" style="display: none;">

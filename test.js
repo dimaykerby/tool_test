@@ -308,9 +308,8 @@ pdfViewer.addEventListener("mousemove", (e) => {
 function loadQuestionsForPage(page) {
     const currentSection = parseInt(sessionStorage.getItem("currentSection"));
     const submitButton = document.getElementById("submitAnswers");    
-
-    console.log(`🔍 Attempting to Load Page: ${page}, Current Section: ${currentSection}, Subsection: ${currentSubsection}`);
-
+    const prevPageBtn = document.getElementById("prevPage");
+    const nextPageBtn = document.getElementById("nextPage");
 
     console.log(`📄 Loading Page: ${page}`);
 
@@ -327,19 +326,34 @@ function loadQuestionsForPage(page) {
 
     questionContainer.innerHTML = "";
 
-    // ✅ First Page Special Display
+    // ✅ First Page Special Display: Hide Navigation & Show Welcome Message
     if (page === 1) {
         console.log("📄 First Page - Showing Welcome Message");
 
         questionContainer.innerHTML = `
-            <h2>Buon lavoro! 🎯</h2>
-            <p>Premi "Avanti" per cominciare.</p>
+            <h2>Il test è da svolgere a schermo intero. Ogni tentativo di uscire annulla il test. Buon lavoro! 🎯</h2>
+            <p>Premi "Inizia Test" per cominciare.</p>
+            <button id="startTestBtn">Inizia Test</button>
         `;
 
+        // ✅ Hide navigation buttons
+        prevPageBtn.style.display = "none";
+        nextPageBtn.style.display = "none";
         if (submitButton) submitButton.style.display = "none";
+
+        // ✅ Attach event listener to "Inizia Test"
+        document.getElementById("startTestBtn").addEventListener("click", async () => {
+            await enforceFullScreen();  // ✅ Go fullscreen before starting
+            loadQuestionsForPage(2);  // ✅ Move to the first real test page
+        });
+
         return; // ✅ Prevent further execution
     }
-    if (submitButton) submitButton.style.display = "inline-block";  
+
+    // ✅ Show navigation buttons again on other pages
+    prevPageBtn.style.display = "inline-block";
+    nextPageBtn.style.display = "inline-block";
+    if (submitButton) submitButton.style.display = "inline-block";
 
     const pageQuestions = questions.filter(q => q.page_number === currentPage);
 
@@ -534,3 +548,28 @@ function updateNavigationButtons() {
         prevPageBtn.disabled = false;
     }
 }
+
+// ✅ Select the test container (modify ID/class as needed)
+const testContainer = document.querySelector("#testContainer"); // Ensure this ID exists in test.html
+
+// ✅ Force Fullscreen on Wide Screen When Test Starts
+async function enforceFullScreen() {
+    if (window.innerWidth > 1024) { // ✅ Only for wide screens
+        if (!document.fullscreenElement) {
+            try {
+                await document.documentElement.requestFullscreen();
+                console.log("🔲 Fullscreen Mode Activated");
+            } catch (err) {
+                console.error("❌ Fullscreen mode not supported:", err);
+            }
+        }
+    }
+}
+
+// ✅ Detect Fullscreen Exit & Force Re-Entry
+document.addEventListener("fullscreenchange", function () {
+    if (!document.fullscreenElement) {
+        alert("⚠ The test has been cancelled. You are being redirected to your progress tree.");
+        window.location.href = "test_selection.html"; // ✅ Redirect immediately
+    }
+});
