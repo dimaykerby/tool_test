@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Bocconi</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+  <div class="test-bocconi-container" id="testContainer" tabindex="0">
+    <!-- Expanded Question Section -->
+    <div class="bocconi-question-section">
+      <!-- Timer (hidden on welcome page) -->
+      <div id="timer" class="bocconi-timer" style="visibility: hidden;">⏳ Tempo: <span id="time-left"></span></div>
+      
+      <!-- Navigation Buttons: Only "Next" is used -->
+      <div class="bocconi-navigation">
+        <button id="nextPage" style="display: none;">Avanti</button>
+      </div>
+      
+      <!-- Question & Answer Container -->
+      <div id="question-container"></div>
+      
+      <!-- Submit Section -->
+      <div class="bocconi-submit-section">
+        <button id="submitAnswers" style="display: none;">Manda Risposte</button>
+        <p id="submissionMessage" style="color: green; display: none;"></p>
+      </div>
+    </div>
+
+    <!-- Right Side Navigation Quiz -->
+    <div class="bocconi-nav-container">
+      <h3>Navigazione quiz</h3>
+      <div id="questionNav"></div>
+    </div>
+  </div>
+
+  <!-- Include Supabase -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";  
+
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+
+  <script type="module" src="test_bocconi.js"></script>
+</body>
+</html>

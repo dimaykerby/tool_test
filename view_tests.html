@@ -27,66 +27,121 @@
         document.getElementById("studentTestProgressTitle").textContent = `${studentName}'s Test Progress`;
         const exercises = ["Esercizi per casa", "Assessment", "Post Assessment"];
         const sections = ["Logica e Insiemi", "Algebra", "Goniometria e Trigonometria", "Logaritmi e Esponenziali", "Geometria", "Probabilità, Combinatoria e Statistica", "Simulazioni"];
+        document.getElementById("studentTestProgressTitle").textContent = `${studentName}'s Test Progress`;
 
         if (!studentId) {
             alert("Error: No student selected.");
             window.location.href = "tutor_dashboard.html";
         }
 
+
         async function loadTestTree() {
-            console.log("👤 Viewing tests for Student UID:", studentId);
+        console.log("👤 Viewing tests for Student UID:", studentId);
 
-            // ✅ Fetch student's test progress using `auth_uid`
-            const { data: studentTests, error: progressError } = await supabase
-                .from("student_tests")
-                .select("*")
-                .eq("auth_uid", studentId)
-                .order("section, test_number");
+        // ✅ Fetch student's test type (tolc_i or bocconi)
+        const { data: student, error: studentError } = await supabase
+            .from("students")
+            .select("test")
+            .eq("auth_uid", studentId)
+            .single();
 
-            if (progressError) {
-                console.error("❌ Error fetching student progress:", progressError.message);
-                return;
-            }
+        if (studentError || !student) {
+            console.error("❌ Error fetching student test type:", studentError?.message);
+            alert("Student data not found. Please contact support.");
+            return;
+        }
 
-            console.log("📊 Student Progress Data:", studentTests);
+        const studentTestType = student.test;
+        console.log(`📌 Student Test Type: ${studentTestType}`);
 
-            // ✅ Fetch unique sections & tests from `questions` table
-            const { data: tests, error } = await supabase
+        // ✅ Fetch student's test progress using `auth_uid`
+        const { data: studentTests, error: progressError } = await supabase
+            .from("student_tests")
+            .select("*")
+            .eq("auth_uid", studentId)
+            .order("section, test_number");
+
+        if (progressError) {
+            console.error("❌ Error fetching student progress:", progressError.message);
+            return;
+        }
+
+        console.log("📊 Student Progress Data:", studentTests);
+
+        // ✅ Fetch unique sections & tests based on test type
+        let tests = [];
+
+        if (studentTestType === "tolc_i") {
+            const { data, error } = await supabase
                 .from("questions")
                 .select("section, test_number")
                 .order("section, test_number");
 
             if (error) {
-                console.error("❌ Error fetching test structure:", error.message);
+                console.error("❌ Error fetching TOLC-I test structure:", error.message);
                 return;
             }
-
+            
             // ✅ Remove duplicates manually
-            const uniqueTests = Array.from(
-                new Set(tests.map(test => `${test.section}-${test.test_number}`))
-            ).map(key => {
-                const [section, test_number] = key.split("-").map(Number);
-                return { section, test_number };
-            });
+            tests = Array.from(new Set(data.map(test => `${test.section}-${test.test_number}`)))
+                .map(key => {
+                    const [section, test_number] = key.split("-").map(Number);
+                    return { section, test_number };
+                });
 
-            displayTestTree(uniqueTests, studentTests);
+        } else if (studentTestType === "bocconi") {
+            const { data, error } = await supabase
+                .from("questions_bocconi")
+                .select("section, test_number")
+                .order("test_number");
+
+            if (error) {
+                console.error("❌ Error fetching Bocconi test structure:", error.message);
+                return;
+            }
+            
+            // ✅ Remove duplicates manually
+            tests = Array.from(new Set(data.map(test => `${test.section}-${test.test_number}`)))
+                .map(key => {
+                    const [section, test_number] = key.split("-").map(Number);
+                    return { section, test_number };
+                });
         }
 
-        function displayTestTree(tests, studentTests) {
+        displayTestTree(tests, studentTests, studentTestType);
+    }
+
+        function displayTestTree(tests, studentTests, studentTestType) {
             const testTree = document.getElementById("testTree");
             testTree.innerHTML = "";
-
             let currentSection = null;
             let sectionDiv = null;
 
+            // Define section names for TOLC-I
+            const sections = [
+                "Logica e Insiemi", "Algebra", "Goniometria e Trigonometria",
+                "Logaritmi e Esponenziali", "Geometria",
+                "Probabilità, Combinatoria e Statistica", "Simulazioni"
+            ];
+
+            if (studentTestType === "bocconi") {
+                // ✅ Bocconi test: Show only "Simulazioni"
+                sectionDiv = document.createElement("div");
+                sectionDiv.classList.add("section");
+                sectionDiv.innerHTML = `<h3>Simulazioni</h3>`;
+                testTree.appendChild(sectionDiv);
+            }
+
             tests.forEach(test => {
-                if (test.section !== currentSection) {
-                    // ✅ Create a new section
-                    currentSection = test.section;
-                    sectionDiv = document.createElement("div");
-                    sectionDiv.classList.add("section");
-                    sectionDiv.innerHTML = `<h3>${sections[currentSection - 1]}</h3>`;
-                    testTree.appendChild(sectionDiv);
+                if (studentTestType === "tolc_i") {
+                    // ✅ Standard TOLC-I behavior with multiple sections
+                    if (test.section !== currentSection) {
+                        currentSection = test.section;
+                        sectionDiv = document.createElement("div");
+                        sectionDiv.classList.add("section");
+                        sectionDiv.innerHTML = `<h3>${sections[currentSection - 1]}</h3>`;
+                        testTree.appendChild(sectionDiv);
+                    }
                 }
 
                 // ✅ Find student progress for this test
@@ -95,8 +150,10 @@
 
                 // ✅ Create test button
                 const testBtn = document.createElement("button");
-                if (test.section < 7) {
-                    testBtn.textContent = `${exercises[test.test_number - 1]}`;
+
+                if (studentTestType === "tolc_i") {
+                    const exercises = ["Esercizi per casa", "Assessment", "Post Assessment"];
+                    testBtn.textContent = test.section < 7 ? `${exercises[test.test_number - 1]}` : `Simulazione ${test.test_number}`;
                 } else {
                     testBtn.textContent = `Simulazione ${test.test_number}`;
                 }
@@ -105,29 +162,36 @@
                 if (status === "completed") {
                     testBtn.textContent += " ✔ Done";
                     testBtn.classList.add("completed");
-                    testBtn.onclick = () => confirmResetTest(test.section, test.test_number); // ✅ Prevent toggle, ask to reset
+                    testBtn.onclick = () => confirmResetTest(test.section, test.test_number);
                 } else {
-                    testBtn.classList.add(status); // `locked` or `unlocked`
+                    testBtn.classList.add(status);
                     testBtn.onclick = () => toggleTestLock(test.section, test.test_number, status);
                 }
 
-                // ✅ Append the button to the section
                 sectionDiv.appendChild(testBtn);
             });
         }
 
-        async function confirmResetTest(section, testNumber) {
+        async function confirmResetTest(section, testNumber, studentTestType) {
             const confirmReset = confirm("⚠ This test is marked as completed. Do you want to reset it and remove all student answers?");
             if (!confirmReset) return;
 
             console.log(`🔄 Resetting Test: Section ${section}, Test ${testNumber}`);
 
             // ✅ Step 1: Find all question IDs linked to this test
-            const { data: questions, error: questionError } = await supabase
+            if (studentTestType === "tolc_i") {
+                const { data: questions, error: questionError } = await supabase
                 .from("questions")
                 .select("id")
                 .eq("section", section)
                 .eq("test_number", testNumber);
+            } else {
+                const { data: questions, error: questionError } = await supabase
+                .from("questions_bocconi")
+                .select("id")
+                .eq("section", section)
+                .eq("test_number", testNumber);
+            }
 
             if (questionError) {
                 console.error("❌ Error fetching questions for reset:", questionError);
@@ -142,11 +206,19 @@
             }
 
             // ✅ Step 2: Delete student answers linked to these questions
-            const { error: deleteError } = await supabase
+            if (studentTestType === "tolc_i") {
+                const { error: deleteError } = await supabase
                 .from("student_answers")
                 .delete()
                 .in("question_id", questionIds)
                 .eq("auth_uid", studentId); // ✅ Delete only this student's answers
+            } else {
+                const { error: deleteError } = await supabase
+                .from("student_answers_bocconi")
+                .delete()
+                .in("question_id", questionIds)
+                .eq("auth_uid", studentId); // ✅ Delete only this student's answers
+            }
 
             if (deleteError) {
                 console.error("❌ Error deleting student answers:", deleteError);
@@ -155,12 +227,21 @@
             }
 
             // ✅ Step 3: Set test status back to "locked"
-            const { error: updateError } = await supabase
+            if (studentTestType === "tolc_i") {
+                const { error: updateError } = await supabase
                 .from("student_tests")
                 .update({ status: "locked", tutor_unlocked: false })
                 .eq("auth_uid", studentId)
                 .eq("section", section)
                 .eq("test_number", testNumber);
+            } else {
+                const { error: updateError } = await supabase
+                .from("student_tests_bocconi")
+                .update({ status: "locked", tutor_unlocked: false })
+                .eq("auth_uid", studentId)
+                .eq("section", section)
+                .eq("test_number", testNumber);
+            }
 
             if (updateError) {
                 console.error("❌ Error resetting test status:", updateError);
@@ -189,7 +270,12 @@
                 return;
             }
 
-            alert(`✅${exercises[testNumber-1]} in ${sections[section-1]} is now ${newStatus}!`);
+            if (section < 7) {
+                alert(`✅${exercises[testNumber-1]} in ${sections[section-1]} is now ${newStatus}!`);
+            }
+            else {
+                alert(`✅Simulazione ${testNumber} is now ${newStatus}!`);
+            }
             loadTestTree(); // ✅ Reload progress tree
         }
 

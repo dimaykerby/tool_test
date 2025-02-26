@@ -1,28 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
     const signupBtn = document.getElementById("signupBtn");
-
+  
     if (!signupBtn) {
         console.error("❌ ERROR: Signup button not found.");
         return;
     }
-
+  
     signupBtn.addEventListener("click", async () => {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
         const fullName = document.getElementById("fullName").value.trim();
         const tutorId = document.getElementById("tutorDropdown").value;
-
-        if (!email || !password || !fullName) {
-            alert("Please fill in all fields.");
+        const testType = document.getElementById("testDropdown").value; // New test selection
+  
+        if (!email || !password || !fullName || !tutorId || !testType) {
+            alert("Please fill in all fields, including test type.");
             return;
         }
-
-        await signUpStudent(email, password, fullName, tutorId);
+  
+        await signUpStudent(email, password, fullName, tutorId, testType);
     });
 });
-
-// ✅ Function to Sign Up a Student and Store in Database
-async function signUpStudent(email, password, fullName, tutorId) {
+  
+  // ✅ Function to Sign Up a Student and Store in Database
+async function signUpStudent(email, password, fullName, tutorId, testType) {
     const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
@@ -35,17 +36,17 @@ async function signUpStudent(email, password, fullName, tutorId) {
     console.log("✅ Signup successful! Auth UID:", user.id);
 
     // ✅ Wait until the user exists in `auth.users`
-    await new Promise(resolve => setTimeout(resolve, 3000));  // Wait 3 seconds   
+    await new Promise(resolve => setTimeout(resolve, 3000));  // Wait 3 seconds
 
     if (!tutorId) {
         alert("Please select a tutor.");
         return;
     }
 
-    // ✅ Insert student with selected tutor
+    // Insert student with selected tutor and test type (new column 'test')
     const { error: insertError } = await supabase
         .from("students")
-        .insert([{ auth_uid: user.id, email, name: fullName, tutor_id: tutorId }]);
+        .insert([{ auth_uid: user.id, email, name: fullName, tutor_id: tutorId, test: testType }]);
 
     if (insertError) {
         console.error("❌ Error saving student info:", insertError.message);
@@ -54,19 +55,31 @@ async function signUpStudent(email, password, fullName, tutorId) {
     }
 
     // ✅ Initialize their test progress in `student_tests`
-    await initializeStudentTests(user.id);
+    await initializeStudentTests(user.id, testType);
 
     alert("✅ Signup successful! You can now log in.");
     window.location.href = "index.html"; // Redirect to login
 }
+  
+// Function to initialize test progress remains unchanged...
+// Function to initialize test progress for a new student based on their test type
+async function initializeStudentTests(authUid, testType) {
+    console.log("📌 Initializing tests for user:", authUid, "with test type:", testType);
 
-// ✅ Function to Insert Test Progress for a New Student
-async function initializeStudentTests(authUid) {
-    console.log("📌 Initializing tests for user:", authUid);
+    // Determine which questions table to use based on test type
+    let tableName;
+    if (testType === "tolc_i") {
+        tableName = "questions";
+    } else if (testType === "bocconi") {
+        tableName = "questions_bocconi";
+    } else {
+        console.error("❌ Unknown test type:", testType);
+        return;
+    }
 
-    // ✅ Fetch unique section & test_number from `questions` table
+    // Query the chosen questions table to get unique tests
     const { data: tests, error } = await supabase
-        .from("questions")
+        .from(tableName)
         .select("section, test_number")
         .order("section, test_number");
 
@@ -75,7 +88,7 @@ async function initializeStudentTests(authUid) {
         return;
     }
 
-    // ✅ Remove duplicates manually
+    // Remove duplicates manually:
     const uniqueTests = Array.from(
         new Set(tests.map(test => `${test.section}-${test.test_number}`))
     ).map(key => {
@@ -83,15 +96,15 @@ async function initializeStudentTests(authUid) {
         return { section, test_number };
     });
 
-    // ✅ Prepare test data for insertion
+    // Prepare test progress entries for the student_tests table:
     const testEntries = uniqueTests.map(test => ({
-        auth_uid: authUid,  // ✅ Now using `auth_uid`
+        auth_uid: authUid,
         section: test.section,
         test_number: test.test_number,
-        status: test.section === 1 && test.test_number === 1 ? "unlocked" : "locked"
+        // Only unlock the first test (section 1, test 1) by default:
+        status: (test.section === 1 && test.test_number === 1) ? "unlocked" : "locked"
     }));
 
-    // ✅ Insert tests into `student_tests`
     const { error: insertError } = await supabase.from("student_tests").insert(testEntries);
 
     if (insertError) {
@@ -100,24 +113,22 @@ async function initializeStudentTests(authUid) {
         console.log("✅ Student test entries created!");
     }
 }
-
+  
 async function loadTutors() {
     const tutorDropdown = document.getElementById("tutorDropdown");
-
+  
     const { data, error } = await supabase
         .from("tutors")
         .select("id, name");
-
+  
     if (error) {
         console.error("❌ Error fetching tutors:", error.message);
         alert("Failed to load tutors.");
         return;
     }
-
-    // ✅ Clear previous options
+  
     tutorDropdown.innerHTML = '<option value="">Select Your Tutor</option>';
-
-    // ✅ Populate dropdown with tutor names
+  
     data.forEach(tutor => {
         let option = document.createElement("option");
         option.value = tutor.id;
@@ -125,9 +136,6 @@ async function loadTutors() {
         tutorDropdown.appendChild(option);
     });
 }
-
-// ✅ Refresh button to reload tutor list
+  
 document.getElementById("refreshTutors").addEventListener("click", loadTutors);
-
-// ✅ Call this when the page loads
 document.addEventListener("DOMContentLoaded", loadTutors);
