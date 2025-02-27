@@ -162,7 +162,7 @@
                 if (status === "completed") {
                     testBtn.textContent += " ✔ Done";
                     testBtn.classList.add("completed");
-                    testBtn.onclick = () => confirmResetTest(test.section, test.test_number);
+                    testBtn.onclick = () => confirmResetTest(test.section, test.test_number, studentTestType);
                 } else {
                     testBtn.classList.add(status);
                     testBtn.onclick = () => toggleTestLock(test.section, test.test_number, status);
@@ -176,22 +176,14 @@
             const confirmReset = confirm("⚠ This test is marked as completed. Do you want to reset it and remove all student answers?");
             if (!confirmReset) return;
 
-            console.log(`🔄 Resetting Test: Section ${section}, Test ${testNumber}`);
+            console.log(`🔄 Resetting Test: Section ${section}, Test ${testNumber}, Test Type: ${studentTestType}`);
 
             // ✅ Step 1: Find all question IDs linked to this test
-            if (studentTestType === "tolc_i") {
-                const { data: questions, error: questionError } = await supabase
-                .from("questions")
+            const { data: questions, error: questionError } = await supabase
+                .from(studentTestType === "tolc_i" ? "questions" : "questions_bocconi")
                 .select("id")
                 .eq("section", section)
                 .eq("test_number", testNumber);
-            } else {
-                const { data: questions, error: questionError } = await supabase
-                .from("questions_bocconi")
-                .select("id")
-                .eq("section", section)
-                .eq("test_number", testNumber);
-            }
 
             if (questionError) {
                 console.error("❌ Error fetching questions for reset:", questionError);
@@ -206,19 +198,11 @@
             }
 
             // ✅ Step 2: Delete student answers linked to these questions
-            if (studentTestType === "tolc_i") {
-                const { error: deleteError } = await supabase
-                .from("student_answers")
+            const { error: deleteError } = await supabase
+                .from(studentTestType === "tolc_i" ? "student_answers" : "studentbocconi_answers")
                 .delete()
                 .in("question_id", questionIds)
-                .eq("auth_uid", studentId); // ✅ Delete only this student's answers
-            } else {
-                const { error: deleteError } = await supabase
-                .from("student_answers_bocconi")
-                .delete()
-                .in("question_id", questionIds)
-                .eq("auth_uid", studentId); // ✅ Delete only this student's answers
-            }
+                .eq("auth_uid", studentId);
 
             if (deleteError) {
                 console.error("❌ Error deleting student answers:", deleteError);
@@ -227,21 +211,12 @@
             }
 
             // ✅ Step 3: Set test status back to "locked"
-            if (studentTestType === "tolc_i") {
-                const { error: updateError } = await supabase
+            const { error: updateError } = await supabase
                 .from("student_tests")
                 .update({ status: "locked", tutor_unlocked: false })
                 .eq("auth_uid", studentId)
                 .eq("section", section)
                 .eq("test_number", testNumber);
-            } else {
-                const { error: updateError } = await supabase
-                .from("student_tests_bocconi")
-                .update({ status: "locked", tutor_unlocked: false })
-                .eq("auth_uid", studentId)
-                .eq("section", section)
-                .eq("test_number", testNumber);
-            }
 
             if (updateError) {
                 console.error("❌ Error resetting test status:", updateError);

@@ -598,6 +598,21 @@ function buildQuestionNav() {
   
     questionNav.innerHTML = ""; // Clear existing
   
+    // Determine the current question range based on the questions on the current page.
+    const currentPageQuestions = questions.filter(q => q.page_number === currentPage);
+    let currentRange = null;
+    if (currentPageQuestions.length > 0) {
+      const firstQuestionNumber = currentPageQuestions[0].question_number;
+      if (firstQuestionNumber >= 1 && firstQuestionNumber <= 20)
+        currentRange = { min: 1, max: 20 };
+      else if (firstQuestionNumber >= 21 && firstQuestionNumber <= 30)
+        currentRange = { min: 21, max: 30 };
+      else if (firstQuestionNumber >= 31 && firstQuestionNumber <= 40)
+        currentRange = { min: 31, max: 40 };
+      else if (firstQuestionNumber >= 41 && firstQuestionNumber <= 50)
+        currentRange = { min: 41, max: 50 };
+    }
+  
     // 1. Sort questions by question_number
     const sortedQuestions = [...questions].sort(
       (a, b) => a.question_number - b.question_number
@@ -616,15 +631,21 @@ function buildQuestionNav() {
         btn.classList.add("answered");
       }
   
-      // 4. If this question is on the current page, highlight
+      // 4. If this question is on the current page, highlight it
       if (q.page_number === currentPage) {
         btn.classList.add("current-question");
       }
   
-      // 5. On click, jump to that question's page
-      btn.addEventListener("click", () => {
-        loadQuestionsForPage(q.page_number);
-      });
+      // 5. Disable navigation to questions outside the current range
+      if (currentRange && (q.question_number < currentRange.min || q.question_number > currentRange.max)) {
+        btn.disabled = true;
+        btn.classList.add("disabled-nav"); // Optional: add a class for styling (e.g., to gray out)
+      } else {
+        // Allow navigation within the current range
+        btn.addEventListener("click", () => {
+          loadQuestionsForPage(q.page_number);
+        });
+      }
   
       questionNav.appendChild(btn);
     });
