@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .charts-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    canvas {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2 id="dashboardTitle"></h2>
+
+    <div id="filters">
+      <select id="sectionFilter" style="display: none;"></select>
+      <select id="exerciseFilter" style="display: none;"></select>
+      <select id="argomentoFilter"></select>
+    </div>
+
+    <!-- Container for both charts -->
+    <div class="charts-container">
+      <canvas id="resultsChart"></canvas>
+      <canvas id="barChart"></canvas>
+    </div>
+    <div id="scoreDisplay"></div>
+
+    <button onclick="goBack()">⬅ Back</button>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

@@ -102,7 +102,8 @@
                 studentDiv.innerHTML = `
                     <h3>${student.name}</h3>
                     <div id="tree-${student.auth_uid}" class="testTree"></div>
-                    <button class="viewTestsBtn" onclick="viewStudentTests('${student.auth_uid}', '${student.name}')">View Tests</button>
+                    <button class="viewTestsBtn" onclick="viewStudentTests('${student.auth_uid}', '${student.name}')">View Assigned Tests</button>
+                    <button class="dashboardBtn" onclick="viewStudentDashboard('${student.auth_uid}', '${student.name}')">View Results Dashboard</button>
                 `;
 
                 studentsContainer.appendChild(studentDiv);
@@ -114,6 +115,13 @@
             sessionStorage.setItem("selectedStudentId", studentId);
             sessionStorage.setItem("selectedStudentName", studentName);
             window.location.href = "view_tests.html";
+        };
+
+        // ✅ Redirects to `dashboard.html` with student ID
+        window.viewStudentDashboard = function (studentId, studentName) {
+            sessionStorage.setItem("selectedStudentId", studentId);
+            sessionStorage.setItem("selectedStudentName", studentName);
+            window.location.href = "dashboard.html";
         };
 
         document.getElementById("logoutBtn").addEventListener("click", async () => {
