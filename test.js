@@ -7,6 +7,7 @@ let studentAnswers = {};
 let sectionPageBoundaries = {};
 let testEndTime;
 let pdfDoc = null; // Holds the loaded PDF document
+let isSubmitting = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("DOM fully loaded. Initializing test...");
@@ -166,6 +167,9 @@ async function loadTest() {
     questions = data;
     totalPages = Math.max(...questions.map(q => q.page_number));
 
+    // Build nav grid once
+    buildQuestionNav();
+
     console.log(`Test loaded successfully! Total pages: ${totalPages}`);
 
     // ✅ Render only the first page correctly
@@ -306,7 +310,6 @@ pdfViewer.addEventListener("mousemove", (e) => {
 
 
 function loadQuestionsForPage(page) {
-    const currentSection = parseInt(sessionStorage.getItem("currentSection"));
     const submitButton = document.getElementById("submitAnswers");    
     const prevPageBtn = document.getElementById("prevPage");
     const nextPageBtn = document.getElementById("nextPage");
@@ -317,6 +320,7 @@ function loadQuestionsForPage(page) {
     sessionStorage.setItem("currentPage", currentPage);
 
     renderPage(page);
+    buildQuestionNav(); // Refresh nav grid highlight
 
     const questionContainer = document.getElementById("question-container");
     if (!questionContainer) {
@@ -374,6 +378,8 @@ function loadQuestionsForPage(page) {
             questionDiv.appendChild(input);
         } else {
             let choices = (q.wrong_answers || []).concat(q.correct_answer);
+            // Add the two extra choices:
+            choices = choices.concat(["insicuro", "non ho idea"]);
             choices.sort((a, b) => a.localeCompare(b));
 
             choices.forEach(choice => {
@@ -381,9 +387,11 @@ function loadQuestionsForPage(page) {
                 btn.textContent = choice;
                 btn.onclick = () => selectAnswer(q.id, choice, btn);
 
-                if (studentAnswers[q.id] === choice) {
-                    btn.style.background = "green";
-                }
+                if (studentAnswers[q.id] === choice || 
+                    (choice.toLowerCase() === "insicuro" && studentAnswers[q.id] === "x") ||
+                    (choice.toLowerCase() === "non ho idea" && studentAnswers[q.id] === "y")) {
+                     btn.style.background = "green";
+                 }
 
                 questionDiv.appendChild(btn);
             });
@@ -396,14 +404,27 @@ function loadQuestionsForPage(page) {
 }
 
 function selectAnswer(questionId, answer, btn) {
-    studentAnswers[questionId] = answer;
+    let mappedAnswer = answer;
+    // Map "insicuro" to "x" and "non ho idea" to "y"
+    if(answer.toLowerCase() === "insicuro") {
+        mappedAnswer = "x";
+    } else if(answer.toLowerCase() === "non ho idea") {
+        mappedAnswer = "y";
+    }
+    studentAnswers[questionId] = mappedAnswer;
+    buildQuestionNav(); // Update nav grid
 
-    //Only update buttons within the selected question
+    // Only update buttons within the selected question
     const questionDiv = btn.closest("div"); // Find the parent div for this question
     const buttons = questionDiv.querySelectorAll("button");
 
     buttons.forEach(b => {
-        if (b.textContent === answer) {
+        // Determine mapped value for the button's text
+        let btnMapped = b.textContent;
+        if(btnMapped.toLowerCase() === "insicuro") btnMapped = "x";
+        if(btnMapped.toLowerCase() === "non ho idea") btnMapped = "y";
+
+        if (btnMapped === mappedAnswer) {
             b.style.background = "green";
         } else {
             b.style.background = "";
@@ -412,6 +433,7 @@ function selectAnswer(questionId, answer, btn) {
 }
 
 async function submitAnswers() {
+    isSubmitting = true;
     let studentId = sessionStorage.getItem("studentId");
 
     // ✅ If `studentId` is missing, fetch it again
@@ -439,26 +461,21 @@ async function submitAnswers() {
 
     console.log("📌 Submitting answers for student:", studentId);
 
-    // ✅ Ensure submissions array is created correctly
-    const submissions = Object.entries(studentAnswers).map(([questionId, answer]) => {
-        let question = questions.find(q => q.id === questionId); // Ensure questionId is UUID
-        if (!question) {
-            console.warn(`⚠️ Question ID ${questionId} not found.`);
-            return null;
-        }
-
+    // Instead of mapping over studentAnswers, loop over all questions:
+    const submissions = questions.map(q => {
+        // If no answer selected for this question, assign "z"
+        const answer = (q.id in studentAnswers) ? studentAnswers[q.id] : "z";
         let auto_score = null;
-        if (!question.is_open_ended) {
-            auto_score = answer === question.correct_answer ? 1 : 0; // Auto-score MCQs
+        if (!q.is_open_ended) {
+            auto_score = answer === q.correct_answer ? 1 : 0;
         }
-
         return {
-            auth_uid: studentId,  // ✅ Now using `auth_uid` instead of `student_id`
-            question_id: questionId,  // ✅ Ensure `UUID` is stored
+            auth_uid: studentId,  // Using auth_uid
+            question_id: q.id,
             answer: answer,
             auto_score: auto_score
         };
-    }).filter(submission => submission !== null); // ✅ Remove null values
+    });
 
     console.log("✅ Final submission data:", submissions);
 
@@ -568,8 +585,47 @@ async function enforceFullScreen() {
 
 // ✅ Detect Fullscreen Exit & Force Re-Entry
 document.addEventListener("fullscreenchange", function () {
+    if (isSubmitting) return; // ✅ Skip if already submitting
     if (!document.fullscreenElement) {
         alert("⚠ The test has been cancelled. You are being redirected to your progress tree.");
         window.location.href = "test_selection.html"; // ✅ Redirect immediately
     }
 });
+
+function buildQuestionNav() {
+    const questionNav = document.getElementById("questionNav");
+    if (!questionNav) return;
+  
+    questionNav.innerHTML = ""; // Clear existing
+  
+    // 1. Sort questions by question_number
+    const sortedQuestions = [...questions].sort(
+      (a, b) => a.question_number - b.question_number
+    );
+  
+    // 2. Create a cell for each question
+    sortedQuestions.forEach((q) => {
+      const btn = document.createElement("button");
+      btn.classList.add("question-cell");
+  
+      // Display question_number in the cell
+      btn.textContent = q.question_number;
+  
+      // 3. If answered, turn green
+      if (studentAnswers[q.id]) {
+        btn.classList.add("answered");
+      }
+  
+      // 4. If this question is on the current page, highlight
+      if (q.page_number === currentPage) {
+        btn.classList.add("current-question");
+      }
+  
+      // 5. On click, jump to that question's page
+      btn.addEventListener("click", () => {
+        loadQuestionsForPage(q.page_number);
+      });
+  
+      questionNav.appendChild(btn);
+    });
+  }

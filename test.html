@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mock Test</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Mock Test</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
-    <div class="test-container" tabindex="0">
-        <!-- PDF Canvas Viewer (Replaces iframe) -->
-        <div class="pdf-viewer">
-            <canvas id="pdfCanvas"></canvas>
-        </div>
-
-
-        <!-- Question & Answer Section -->
-        <div class="question-section">
-            <div id="timer" style="visibility: visible;">⏳ Tempo: <span id="time-left"></span></div>
-                        
-        <!-- Navigation Buttons (Hidden on First Page) -->
-        <div class="navigation">
-            <button id="prevPage" style="display: none;">Indietro</button>
-            <button id="nextPage" style="display: none;">Avanti</button>
-        </div>
-            <h2 id="question-text"></h2>
-            <div id="question-container"></div>
-            <input type="text" id="open-ended-answer" placeholder="Type your answer" style="display: none;">
-
-            <!-- Submit Answers Button -->
-            <div class="submit-section">
-                <button id="submitAnswers" style="display: none;">Manda Risposte</button>
-                <p id="submissionMessage" style="color: green; display: none;"></p>
-            </div> 
-
-            <div class="pdf-controls">
-                <button id="zoomIn">➕ Zoom In</button>
-                <button id="zoomOut">➖ Zoom Out</button>
-            </div>
-            
-
-        </div>
-
+  <div class="test-container">
+    <!-- Left side: PDF Viewer -->
+    <div class="pdf-viewer">
+      <canvas id="pdfCanvas"></canvas>
+      <!-- PDF Controls placed inside pdf-viewer -->
+      <div class="pdf-controls">
+        <button id="zoomIn">➕ Zoom In</button>
+        <button id="zoomOut">➖ Zoom Out</button>
+      </div>
     </div>
+
+    <!-- Middle: Question & Answer Section -->
+    <div class="question-section">
+      <div id="timer">⏳ Tempo: <span id="time-left"></span></div>
+
+      <div class="navigation">
+        <button id="prevPage" style="display: none;">Indietro</button>
+        <button id="nextPage" style="display: none;">Avanti</button>
+      </div>
+
+      <h2 id="question-text"></h2>
+      <div id="question-container"></div>
+      <input type="text" id="open-ended-answer" placeholder="Type your answer" style="display: none;">
+
+      <div class="submit-section">
+        <button id="submitAnswers" style="display: none;">Manda Risposte</button>
+        <p id="submissionMessage" style="color: green; display: none;"></p>
+      </div>
+    </div>
+
+    <!-- Right side: Navigation Quiz -->
+    <div class="nav-container">
+      <h3>Navigazione quiz</h3>
+      <div id="questionNav"></div>
+    </div>
+  </div>
 
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
