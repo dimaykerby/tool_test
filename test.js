@@ -8,6 +8,7 @@ let sectionPageBoundaries = {};
 let testEndTime;
 let pdfDoc = null; // Holds the loaded PDF document
 let isSubmitting = false;
+let testDuration; // New global variable
 
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("DOM fully loaded. Initializing test...");
@@ -137,11 +138,7 @@ async function loadTest() {
 
     console.log("📌 Test Duration:", testData.duration, "seconds");
 
-    const durationMs = testData.duration * 1000;
-    testEndTime = Date.now() + durationMs;
-    console.log(`✅ Test End Time: ${new Date(testEndTime).toLocaleString()}`);
-
-    updateTimer();        
+    testDuration = testData.duration; // Store the duration for later use   
 
     // Fetch questions from Supabase
     let { data, error } = await supabase
@@ -345,10 +342,14 @@ function loadQuestionsForPage(page) {
         nextPageBtn.style.display = "none";
         if (submitButton) submitButton.style.display = "none";
 
-        // ✅ Attach event listener to "Inizia Test"
+
+        // Attach event listener to "Inizia Test"
         document.getElementById("startTestBtn").addEventListener("click", async () => {
-            await enforceFullScreen();  // ✅ Go fullscreen before starting
-            loadQuestionsForPage(2);  // ✅ Move to the first real test page
+            await enforceFullScreen();  // Go fullscreen before starting
+            // Recalculate testEndTime now that the test is starting
+            testEndTime = Date.now() + testDuration * 1000;
+            updateTimer();  // Start the timer
+            loadQuestionsForPage(2);  // Move to the first real test page
         });
 
         return; // ✅ Prevent further execution
@@ -406,31 +407,38 @@ function loadQuestionsForPage(page) {
 function selectAnswer(questionId, answer, btn) {
     let mappedAnswer = answer;
     // Map "insicuro" to "x" and "non ho idea" to "y"
-    if(answer.toLowerCase() === "insicuro") {
-        mappedAnswer = "x";
-    } else if(answer.toLowerCase() === "non ho idea") {
-        mappedAnswer = "y";
+    if (answer.toLowerCase() === "insicuro") {
+      mappedAnswer = "x";
+    } else if (answer.toLowerCase() === "non ho idea") {
+      mappedAnswer = "y";
     }
-    studentAnswers[questionId] = mappedAnswer;
+    
+    // Toggle the answer: if already selected, unselect it
+    if (studentAnswers[questionId] === mappedAnswer) {
+      delete studentAnswers[questionId];
+      mappedAnswer = null;
+    } else {
+      studentAnswers[questionId] = mappedAnswer;
+    }
+    
     buildQuestionNav(); // Update nav grid
-
-    // Only update buttons within the selected question
-    const questionDiv = btn.closest("div"); // Find the parent div for this question
+  
+    // Update buttons within the question UI
+    const questionDiv = btn.closest("div");
     const buttons = questionDiv.querySelectorAll("button");
-
+    
     buttons.forEach(b => {
-        // Determine mapped value for the button's text
-        let btnMapped = b.textContent;
-        if(btnMapped.toLowerCase() === "insicuro") btnMapped = "x";
-        if(btnMapped.toLowerCase() === "non ho idea") btnMapped = "y";
-
-        if (btnMapped === mappedAnswer) {
-            b.style.background = "green";
-        } else {
-            b.style.background = "";
-        }
+      let btnMapped = b.textContent;
+      if (btnMapped.toLowerCase() === "insicuro") btnMapped = "x";
+      if (btnMapped.toLowerCase() === "non ho idea") btnMapped = "y";
+      
+      if (btnMapped === studentAnswers[questionId]) {
+        b.style.background = "green";
+      } else {
+        b.style.background = "";
+      }
     });
-}
+  }
 
 async function submitAnswers() {
     isSubmitting = true;

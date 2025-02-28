@@ -218,3 +218,99 @@ body {
 .current-question {
   outline: 2px solid red;
 }
+
+/* New styles for the merged login layout */
+.login-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.logo-container {
+  flex: 1;
+  background-color: #f4f4f4; /* Adjust background if needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.logo-container .logo {
+  max-width: 80%;
+  height: auto;
+}
+
+.form-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.form-container .container {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  padding: 2rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Larger rounded inputs for email and password */
+.rounded-input {
+  width: 91%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+/* Rounded dropdown for user type */
+.user-dropdown {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #fff;
+}
+
+/* Forgot password link aligned to bottom right */
+.forgot-container {
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+.forgot-container a {
+  text-decoration: none;
+  color: #007BFF;
+  font-size: 0.9rem;
+}
+
+/* Big Sign-In button with specified colors and Poppins font */
+.sign-in-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #23AC75;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-family: 'Poppins', sans-serif;
+  color: #1C2545;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-weight: 700;
+}
+
+.sign-in-btn:hover {
+  opacity: 0.9;
+}
+
+.container h2 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 2rem; /* Adjust the size as needed */
+  color: #23AC75;
+}

@@ -49,7 +49,7 @@
             if (tutorError || !tutorData) {
                 console.error("❌ Error fetching tutor ID:", tutorError);
                 alert("Tutor account not found.");
-                return null;
+                window.location.href = "index.html";
             }
 
             console.log("✅ Tutor ID:", tutorData.id);

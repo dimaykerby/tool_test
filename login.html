@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Preparazione Test</title>
+  <!-- Include Poppins font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="logo-container">
+      <!-- Replace with your actual logo URL -->
+      <img src="https://elrwpaezjnemmiegkyin.supabase.co/storage/v1/object/public/images//6_Logo_trasparente.png" alt="Logo" class="logo" />
+    </div>
+    <div class="form-container">
+      <div class="container">
+        <h2>Preparazione Test</h2>
+        <!-- Email input -->
+        <input type="email" id="email" placeholder="Enter Email" class="rounded-input" />
+        <!-- Password input -->
+        <input type="password" id="password" placeholder="Enter Password" class="rounded-input" />
+        <!-- User type dropdown -->
+        <select id="userType" class="user-dropdown">
+          <option value="student" selected>Student</option>
+          <option value="tutor">Tutor</option>
+        </select>
+        <!-- Forgot password link aligned right -->
+        <div class="forgot-container">
+          <a href="#" id="resetPassword">Forgot password? Reset it</a>
+        </div>
+        <!-- Big Sign-In button -->
+        <button id="loginBtn" class="sign-in-btn">Sign In</button>
+        <p id="errorMessage" style="color: red;"></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://elrwpaezjnemmiegkyin.supabase.co";
+    const SUPABASE_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscndwYWV6am5lbW1pZWdreWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwNzAyMDUsImV4cCI6MjA1MzY0NjIwNX0.p6R2S1HK8kPFYiEAYtYaxIAH8XSmzjQBWQ_ywy3akdI";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginBtn = document.getElementById("loginBtn");
+      const resetPasswordLink = document.getElementById("resetPassword");
+      const userTypeSelect = document.getElementById("userType");
+
+      loginBtn.addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const userType = userTypeSelect.value; // "student" or "tutor"
+
+        if (!email || !password) {
+          alert("Please enter both email and password.");
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          console.error("Login failed:", error.message);
+          alert("Login failed: " + error.message);
+          return;
+        }
+
+        console.log("Logged in successfully!", data);
+        const user = data.user;
+        if (!user || !user.id) {
+          alert("Login error. Please try again.");
+          return;
+        }
+
+        // Redirect based on the selected user type
+        if (userType === "student") {
+          sessionStorage.setItem("studentId", user.id);
+          await supabase.auth.setSession(data.session);
+          window.location.href = "test_selection.html";
+        } else if (userType === "tutor") {
+          sessionStorage.setItem("tutorId", user.id);
+          window.location.href = "tutor_dashboard.html";
+        }
+      });
+
+      resetPasswordLink.addEventListener("click", async () => {
+        const email = prompt("Enter your email to reset your password:");
+        if (!email) return;
+
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: "http://localhost:5000"
+        });
+
+        if (error) {
+          console.error("Password reset failed:", error.message);
+          alert("Password reset failed: " + error.message);
+        } else {
+          alert("A password reset link has been sent to your email.");
+        }
+      });
+
+      (async () => {
+        const { data: user, error } = await supabase.auth.getUser();
+        if (user && user.id) {
+          console.log("User already logged in. Redirecting...");
+          window.location.href = "test_selection.html";
+        }
+      })();
+    });
+  </script>
+</body>
+</html>

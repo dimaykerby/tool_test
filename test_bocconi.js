@@ -198,14 +198,24 @@ function loadQuestionsForPage(page) {
     buildQuestionNavBocconi();
   }
 
-function selectAnswerBocconi(questionId, selectedLetter, btn) {
-  // Store the selected letter for the question.
-  studentAnswers[questionId] = selectedLetter;
-  const parent = btn.parentElement;
-  Array.from(parent.children).forEach(child => child.style.backgroundColor = "");
-  btn.style.backgroundColor = "green";
-  buildQuestionNavBocconi();
-}
+  function selectAnswerBocconi(questionId, selectedLetter, btn) {
+    // Toggle the answer: unselect if the same answer is clicked again
+    if (studentAnswers[questionId] === selectedLetter) {
+      delete studentAnswers[questionId];
+    } else {
+      studentAnswers[questionId] = selectedLetter;
+    }
+    
+    const parent = btn.parentElement;
+    Array.from(parent.children).forEach(child => child.style.backgroundColor = "");
+    
+    // If the answer remains selected after toggling, highlight it
+    if (studentAnswers[questionId]) {
+      btn.style.backgroundColor = "green";
+    }
+    
+    buildQuestionNavBocconi();
+  }
 
 function buildQuestionNavBocconi() {
   const questionNav = document.getElementById("questionNav");
