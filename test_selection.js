@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData || !sessionData.session) {
         console.log("🔄 No active session found. Redirecting to login...");
-        window.location.href = "index.html";
+        window.location.href = "login.html";
         return;
     }
 });
@@ -18,7 +18,7 @@ async function loadTestTree() {
     if (sessionError || !sessionData || !sessionData.session) {
         console.error("❌ No active session:", sessionError?.message);
         alert("Session expired. Please log in again.");
-        window.location.href = "index.html";
+        window.location.href = "login.html";
         return;
     }
 

@@ -58,7 +58,7 @@ async function signUpStudent(email, password, fullName, tutorId, testType) {
     await initializeStudentTests(user.id, testType);
 
     alert("✅ Signup successful! You can now log in.");
-    window.location.href = "index.html"; // Redirect to login
+    window.location.href = "login.html"; // Redirect to login
 }
   
 // Function to initialize test progress remains unchanged...

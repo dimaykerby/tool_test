@@ -67,7 +67,7 @@ async function loadTest() {
     if (!pdfUrl) {
         alert("Test PDF not found! Contact your tutor.");
         console.error("ERROR: No `testPdf` found in sessionStorage.");
-        window.location.href = "index.html";
+        window.location.href = "test_selection.html";
         return;
     }
 
@@ -82,7 +82,7 @@ async function loadTest() {
         if (sessionError || !sessionData || !sessionData.session) {
             console.error("❌ ERROR: No active session found.");
             alert("Session expired. Please log in again.");
-            window.location.href = "index.html";
+            window.location.href = "login.html";
             return;
         }
 
@@ -453,7 +453,7 @@ async function submitAnswers() {
         if (sessionError || !sessionData || !sessionData.session) {
             console.error("❌ ERROR: No active session found.");
             alert("Session expired. Please log in again.");
-            window.location.href = "index.html";
+            window.location.href = "login.html";
             return;
         }
 

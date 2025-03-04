@@ -198,6 +198,7 @@ function filterDashboard() {
     const exerciseFilterVal = document.getElementById("exerciseFilter").value;
     const argomentoFilterVal = document.getElementById("argomentoFilter").value;
     const scoreDisplay = document.getElementById("scoreDisplay");
+    const scoreDisplay2 = document.getElementById("scoreDisplay2");
 
     // Filter questions based on selections.
     let filteredQuestions = globalQuestions;
@@ -235,6 +236,38 @@ function filterDashboard() {
         }
         barCanvas.style.display = "none";
     }
+
+    // Calculate and display the score based on the conditions.
+    if (
+        (globalTestType === "tolc_i" && sectionFilterVal !== "all" && exerciseFilterVal !== "all" && argomentoFilterVal === "all") ||
+        (globalTestType !== "tolc_i" && exerciseFilterVal !== "all" && argomentoFilterVal === "all")
+    ) {
+        const score = calculateScore(filteredAnswers, 1); // Change 1 to 2 for the second modality
+        scoreDisplay.textContent = `Score (1 for correct, 0 otherwise): ${score}`;
+        const score2 = calculateScore(filteredAnswers, 2);
+        scoreDisplay2.textContent = `Score (1 for correct, -0.25 for incorrect, 0 otherwise): ${score2}`;
+        scoreDisplay.style.display = "block";
+        scoreDisplay2.style.display = "block";
+    } else {
+        scoreDisplay.style.display = "none";
+        scoreDisplay2.style.display = "none";
+    }
+}
+
+function calculateScore(answers, modality) {
+    let score = 0;
+    answers.forEach(ans => {
+        if (modality === 1) {
+            score += ans.auto_score === 1 ? 1 : 0;
+        } else if (modality === 2) {
+            if (ans.auto_score === 1) {
+                score += 1;
+            } else if (ans.auto_score === 0 && !["x", "y", "z"].includes(ans.answer)) {
+                score -= 0.25;
+            }
+        }
+    });
+    return score;
 }
 
 function updateChart(answers) {
