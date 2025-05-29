@@ -374,19 +374,30 @@ const allTests = [...qData, ...bData];
 
   // Function to update the list based on the selected tipologia_test.
   function updateUploadedTestsList(selectedTipologia) {
+    // Filter tests by selected tipologia
     const filteredTests = uniqueTests.filter(test => test.tipologia_test === selectedTipologia);
+
+    // Sort filtered tests alphabetically by `section` (or change to another field if needed)
+    filteredTests.sort((a, b) => a.section.localeCompare(b.section, undefined, { sensitivity: 'base' }));
+
+    // Clear the list container
     listContainer.innerHTML = "";
+
+    // Populate list with sorted tests
     filteredTests.forEach(test => {
       const li = document.createElement("li");
       li.textContent = `${test.section}: ${test.tipologia_esercizi} ${test.progressivo}`;
+
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "Elimina";
       deleteBtn.classList.add("delete-test-btn");
       deleteBtn.addEventListener("click", () => deleteTestGroup(test));
+
       li.appendChild(deleteBtn);
       listContainer.appendChild(li);
     });
   }
+
   async function deleteTestGroup(test) {
     const ok = confirm(
       `Sei sicuro di voler eliminare TUTTI i dati per:\n` +
