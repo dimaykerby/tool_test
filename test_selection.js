@@ -70,7 +70,7 @@ async function loadTestTree() {
 
     console.log("📊 Student Progress Data:", studentTests);
     console.log("📊 Selected Test Type:", selectedTest);
-        // ——————— AUTO-UNLOCK PASS ———————
+    // ——————— AUTO-UNLOCK PASS ———————
     //
     // For each automatic test, if the previous unlock_order
     // (also automatic) is completed, unlock this one.
@@ -78,7 +78,7 @@ async function loadTestTree() {
     for (const test of studentTests) {
       if (test.unlock_mode === "automatic" && test.unlock_order > 0) {
         const prevOrder = test.unlock_order - 1;
-        const prevTest = studentTests.find(t => t.unlock_order === prevOrder);
+        const prevTest = studentTests.find(t => t.unlock_order === prevOrder && t.tipologia_test === test.tipologia_test && t.auth_uid === test.auth_uid && t.status === "completed");
         if (
           prevTest &&
           prevTest.unlock_mode === "automatic" &&
@@ -95,7 +95,7 @@ async function loadTestTree() {
             test.status = "unlocked";
           } else {
             console.error(
-              `❌ Auto-unlock failed for test id ${test.id}:`,
+              `❌ Auto-unlock failed for test id ${test.auth_uid}:`,
               updateError.message
             );
           }
